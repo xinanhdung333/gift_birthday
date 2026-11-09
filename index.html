@@ -27,9 +27,9 @@
       html, body { overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
       #stage { position: relative; margin: 10px auto 0; overflow: hidden; }
       #stage #wrap { position: absolute; left: 0; top: 0; margin: 0; transform-origin: 0 0; }
-      #text.mobile { position: relative; left: 0; top: 0; z-index: 2; width: auto; height: auto;
-                     padding: 0 16px 32px; text-align: center; text-shadow: 0 1px 4px #000; }
-      #text.mobile #code { margin-top: 4px; font-size: 17px; line-height: 1.55; }
+      #text.mobile { position: absolute; left: 10px; z-index: 2; height: auto;
+                     text-align: left; text-shadow: 0 1px 3px #000; }
+      #text.mobile #code { margin-top: 0; font-size: 14px; line-height: 1.45; }
       /* nền phủ kín cả màn hình trên iPhone (Safari không hỗ trợ background-attachment: fixed) */
       html { background: #05024a; }
       body { background: none !important; min-height: 100vh; }
@@ -106,16 +106,21 @@
         // ---- Co giãn cho vừa màn hình (iPhone) ----
         var W = window.innerWidth, H = window.innerHeight;
         var PORTRAIT = W < 760 && H > W;   // điện thoại dựng dọc
-        var vx = 0, vw = 1100, s;
+        var s, tx = 0;
         if (PORTRAIT) {
-            vx = 240; vw = 610;            // chỉ hiện phần cây, chữ đưa xuống dưới
-            $('#text').addClass('mobile').insertAfter('#stage');
-            s = W / vw;
+            // cây thu nhỏ chiếm ~56% bên phải, chữ chạy bên trái
+            s = 0.56 * W / 610;
+            tx = W - 1100 * s;
+            var sh = 680 * s;
+            $('#text').addClass('mobile').appendTo('#stage')
+                .css({ width: Math.round(W * 0.45) - 10, top: 0 });
+            $('#stage').css({ width: W, height: sh, overflow: 'visible',
+                              marginTop: Math.max(10, Math.round((H - sh) / 2 - 40)) });
         } else {
-            s = Math.min(1, W / vw, (H - 10) / 680);
+            s = Math.min(1, W / 1100, (H - 10) / 680);
+            $('#stage').css({ width: 1100 * s, height: 680 * s });
         }
-        $('#stage').css({ width: vw * s, height: 680 * s });
-        $('#wrap').css('transform', 'translate(' + (-vx * s) + 'px,0) scale(' + s + ')');
+        $('#wrap').css('transform', 'translate(' + tx + 'px,0) scale(' + s + ')');
 
         var width = canvas.width();
         var height = canvas.height();        
@@ -170,12 +175,10 @@
         }));
 
         var moveAnimate = eval(Jscex.compile("async", function () {
-            if (!PORTRAIT) {
-                tree.snapshot("p1", 240, 0, 610, 680);
-                while (tree.move("p1", 500, 0)) { foot.draw(); $await(Jscex.Async.sleep(10)); }
-                foot.draw();
-                tree.snapshot("p2", 500, 0, 610, 680);
-            }
+            tree.snapshot("p1", 240, 0, 610, 680);
+            while (tree.move("p1", 500, 0)) { foot.draw(); $await(Jscex.Async.sleep(10)); }
+            foot.draw();
+            tree.snapshot("p2", 500, 0, 610, 680);
         }));
 
         var textAnimate = eval(Jscex.compile("async", function () {
@@ -234,7 +237,7 @@
           (10 + Math.random() * 10) + "s, " +
           (3 + Math.random() * 3) + "s";
         img.style.animationDelay = (Math.random() * 5) + "s, 0s";
-        let size = isPhone ? 64 : 100;
+        let size = isPhone ? 46 : 100;
         img.style.width = size + "px";
         img.style.height = size + "px";
         document.body.appendChild(img);
