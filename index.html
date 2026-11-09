@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title> love Tuệ </title>	    
-    <link type="text/css" rel="stylesheet" href="happybday-main/file/default.css">
+    <link type="text/css" rel="stylesheet" href="happybday-main/file/default.css?v=5">
 <script type="text/javascript" src="happybday-main/file/jquery.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-parser.js"></script>
@@ -12,8 +12,8 @@
 <script type="text/javascript" src="happybday-main/file/jscex-builderbase.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-async.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-async-powerpack.min.js"></script>
-<script type="text/javascript" src="happybday-main/file/functions.js" charset="utf-8"></script>
-<script type="text/javascript" src="happybday-main/file/love.js" charset="utf-8"></script>
+<script type="text/javascript" src="happybday-main/file/functions.js?v=5" charset="utf-8"></script>
+<script type="text/javascript" src="happybday-main/file/love.js?v=5" charset="utf-8"></script>
 
     <script>
         var VOCAL_START = 10.5;   // giây ca sĩ bắt đầu hát trong aud.mp3
@@ -30,7 +30,8 @@
             (function check() {
                 var elapsed = (Date.now() - tapTime) / 1000;
                 if (a.currentTime >= VOCAL_START || a.ended ||
-                    (a.paused && elapsed >= VOCAL_START)) cb();
+                    (a.paused && elapsed >= VOCAL_START) ||
+                    elapsed >= VOCAL_START + 3) cb();   // mạng chậm, nhạc kẹt tải thì vẫn hiện chữ
                 else setTimeout(check, 50);
             })();
         }
@@ -243,8 +244,9 @@
         let img = document.createElement("img");
         img.src = images[Math.floor(Math.random() * images.length)];
         img.className = "falling";
-        let startX = Math.random() * 100 + "vw";
-        let endX   = (Math.random() * 100 + 20) + "vw";
+        // giữ ảnh trong bề ngang màn hình (tràn ra ngoài làm iPhone giãn trang)
+        let startX = Math.random() * 85 + "vw";
+        let endX   = Math.random() * 85 + "vw";
         img.style.setProperty("--start-x", startX);
         img.style.setProperty("--end-x", endX);
         img.style.animationDuration =

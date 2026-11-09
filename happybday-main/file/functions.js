@@ -8,7 +8,8 @@ var clientHeight = $win.height();
 $(window).resize(function() {
     var newWidth = $win.width();
     var newHeight = $win.height();
-    if (newWidth != clientWidth && newHeight != clientHeight) {
+    // chỉ tải lại khi xoay máy (iPhone hay đổi kích thước khi cuộn / thanh địa chỉ thu lại)
+    if ((newWidth > newHeight) != (clientWidth > clientHeight)) {
         location.replace(location);
     }
 });
