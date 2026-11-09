@@ -2,6 +2,7 @@
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title> love Tuệ </title>	    
     <link type="text/css" rel="stylesheet" href="happybday-main/file/default.css">
 <script type="text/javascript" src="happybday-main/file/jquery.min.js"></script>
@@ -23,9 +24,17 @@
 
     <!-- Hiệu ứng ảnh rơi -->
     <style>
+      html, body { overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+      #stage { position: relative; margin: 10px auto 0; overflow: hidden; }
+      #stage #wrap { position: absolute; left: 0; top: 0; margin: 0; transform-origin: 0 0; }
+      #text.mobile { position: relative; z-index: 2; text-shadow: 0 1px 4px #000; width: auto; height: auto; padding: 0 20px 40px; text-align: center; }
+      #text.mobile #code { margin-top: 6px; font-size: 18px; line-height: 1.6; }
+      #text.mobile .say { margin-left: 0; }
+
       .falling {
-        position: absolute;
-        top: -100px;
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 50px;
         height: 50px;
         object-fit: contain;
@@ -40,9 +49,13 @@
         100% { transform: translate3d(var(--end-x), 110vh, 0) rotate(360deg); }
       }
 
+      /* chỉ đổi opacity cho nhẹ máy (animate filter rất giật trên iPhone) */
       @keyframes glow {
-        from { opacity: 0.5; filter: drop-shadow(0 0 5px rgba(255,200,230,0.7)); }
-        to   { opacity: 1;   filter: drop-shadow(0 0 20px rgba(255,150,200,1)); }
+        from { opacity: 0.6; }
+        to   { opacity: 1; }
+      }
+      @media (hover: hover) and (min-width: 760px) {
+        .falling { filter: drop-shadow(0 0 10px rgba(255,150,200,0.9)); }
       }
     </style>
 </head>
@@ -53,6 +66,7 @@
             <source src="happybday-main/aud.mp3" type="audio/mp3" />
             <embed height="100" width="100" src="happybday-main/aud.mp3" />
         </audio>
+        <div id="stage">
         <div id="wrap">
             <div id="text">
                 <div id="code">
@@ -65,11 +79,12 @@
                     <span class="say">And I will always love u 🥺 ❤️</span><br>
                     <span class="say">Chúc Tuệ đỗ vào trường mong muốn❤️😘</span><br>
                 </div>
-            </div>happybday-main/
+            </div>
             <div id="clock-box">
                 <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
             </div>
             <canvas id="canvas" width="1100" height="680"></canvas>
+        </div>
         </div>
     </div>
 
@@ -81,6 +96,20 @@
             $("#error").show();
             return false;
         }
+
+        // ---- Co giãn cho vừa màn hình (iPhone) ----
+        var W = window.innerWidth, H = window.innerHeight;
+        var PORTRAIT = W < 760 && H > W;   // điện thoại dựng dọc
+        var vx = 0, vw = 1100, s;
+        if (PORTRAIT) {
+            vx = 240; vw = 610;            // chỉ hiện phần cây, chữ đưa xuống dưới
+            $('#text').addClass('mobile').insertAfter('#stage');
+            s = W / vw;
+        } else {
+            s = Math.min(1, W / vw, (H - 10) / 680);
+        }
+        $('#stage').css({ width: vw * s, height: 680 * s });
+        $('#wrap').css('transform', 'translate(' + (-vx * s) + 'px,0) scale(' + s + ')');
 
         var width = canvas.width();
         var height = canvas.height();        
@@ -102,8 +131,8 @@
         canvas.click(function(e) {
             playAudio();
             var offset = canvas.offset(), x, y;
-            x = e.pageX - offset.left;
-            y = e.pageY - offset.top;
+            x = (e.pageX - offset.left) / s;
+            y = (e.pageY - offset.top) / s;
             if (seed.hover(x, y)) {
                 hold = 0; 
                 canvas.unbind("click");
@@ -112,8 +141,8 @@
             }
         }).mousemove(function(e) {
             var offset = canvas.offset(), x, y;
-            x = e.pageX - offset.left;
-            y = e.pageY - offset.top;
+            x = (e.pageX - offset.left) / s;
+            y = (e.pageY - offset.top) / s;
             canvas.toggleClass('hand', seed.hover(x, y));
         });
 
@@ -135,14 +164,12 @@
         }));
 
         var moveAnimate = eval(Jscex.compile("async", function () {
-            tree.snapshot("p1", 240, 0, 610, 680);
-            while (tree.move("p1", 500, 0)) { foot.draw(); $await(Jscex.Async.sleep(10)); }
-            foot.draw();
-            tree.snapshot("p2", 500, 0, 610, 680);
-            canvas.parent().css("background", "url(" + tree.toDataURL('happybday-main/image.png') + ")");
-            canvas.css("background", "#ffe");
-            $await(Jscex.Async.sleep(300));
-            canvas.css("background", "none");
+            if (!PORTRAIT) {
+                tree.snapshot("p1", 240, 0, 610, 680);
+                while (tree.move("p1", 500, 0)) { foot.draw(); $await(Jscex.Async.sleep(10)); }
+                foot.draw();
+                tree.snapshot("p2", 500, 0, 610, 680);
+            }
         }));
 
         var textAnimate = eval(Jscex.compile("async", function () {
@@ -164,30 +191,31 @@
     <!-- Script ảnh rơi -->
     <script>
       const images = [
-  "happybday-main/anh1.jpg",
-"happybday-main/anh2.jpg",
-"happybday-main/anh3.jpg",
-"happybday-main/anh4.jpg",
-"happybday-main/anh5.jpg",
-"happybday-main/anh6.jpg",
-"happybday-main/anh7.jpg",
-"happybday-main/anh8.jpg",
-"happybday-main/anh9.jpg",
-"happybday-main/anh10.jpg",
-"happybday-main/anh11.jpg",
-"happybday-main/anh12.jpg",
-"happybday-main/anh13.jpg",
-"happybday-main/anh14.jpg",
-"happybday-main/anh15.jpg",
-"happybday-main/anh16.jpg",
-"happybday-main/anh17.jpg",
-"happybday-main/anh18.jpg"
+  "happybday-main/thumb/anh1.jpg",
+"happybday-main/thumb/anh2.jpg",
+"happybday-main/thumb/anh3.jpg",
+"happybday-main/thumb/anh4.jpg",
+"happybday-main/thumb/anh5.jpg",
+"happybday-main/thumb/anh6.jpg",
+"happybday-main/thumb/anh7.jpg",
+"happybday-main/thumb/anh8.jpg",
+"happybday-main/thumb/anh9.jpg",
+"happybday-main/thumb/anh10.jpg",
+"happybday-main/thumb/anh11.jpg",
+"happybday-main/thumb/anh12.jpg",
+"happybday-main/thumb/anh13.jpg",
+"happybday-main/thumb/anh14.jpg",
+"happybday-main/thumb/anh15.jpg",
+"happybday-main/thumb/anh16.jpg",
+"happybday-main/thumb/anh17.jpg",
+"happybday-main/thumb/anh18.jpg"
 
 
 
  
       ];
-      const total = 25;
+      const isPhone = window.innerWidth < 760;
+      const total = isPhone ? 14 : 25;
       for (let i = 0; i < total; i++) {
         let img = document.createElement("img");
         img.src = images[Math.floor(Math.random() * images.length)];
@@ -200,7 +228,7 @@
           (10 + Math.random() * 10) + "s, " +
           (3 + Math.random() * 3) + "s";
         img.style.animationDelay = (Math.random() * 5) + "s, 0s";
-        let size = 100;
+        let size = isPhone ? 64 : 100;
         img.style.width = size + "px";
         img.style.height = size + "px";
         document.body.appendChild(img);
