@@ -286,7 +286,7 @@
                 image = rec.image;
 
             ctx.save();
-            ctx.putImageData(image, point.x, point.y);
+            ctx.drawImage(image, point.x, point.y);
         	ctx.restore();
         },
 
@@ -370,7 +370,9 @@
 
         snapshot: function(k, x, y, width, height) {
             var ctx = this.ctx;
-            var image = ctx.getImageData(x, y, width, height); 
+            var image = document.createElement('canvas');
+            image.width = width; image.height = height;
+            image.getContext('2d').drawImage(this.canvas, x, y, width, height, 0, 0, width, height);
             this.record[k] = {
                 image: image,
                 point: new Point(x, y),
@@ -395,7 +397,7 @@
 
             ctx.save();
             ctx.clearRect(point.x, point.y, width, height);
-            ctx.putImageData(image, i, j);
+            ctx.drawImage(image, i, j);
         	ctx.restore();
 
             rec.point = new Point(i, j);

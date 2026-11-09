@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title> love Tuệ </title>	    
-    <link type="text/css" rel="stylesheet" href="happybday-main/file/default.css?v=5">
+    <link type="text/css" rel="stylesheet" href="happybday-main/file/default.css?v=6">
 <script type="text/javascript" src="happybday-main/file/jquery.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-parser.js"></script>
@@ -12,8 +12,8 @@
 <script type="text/javascript" src="happybday-main/file/jscex-builderbase.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-async.min.js"></script>
 <script type="text/javascript" src="happybday-main/file/jscex-async-powerpack.min.js"></script>
-<script type="text/javascript" src="happybday-main/file/functions.js?v=5" charset="utf-8"></script>
-<script type="text/javascript" src="happybday-main/file/love.js?v=5" charset="utf-8"></script>
+<script type="text/javascript" src="happybday-main/file/functions.js?v=6" charset="utf-8"></script>
+<script type="text/javascript" src="happybday-main/file/love.js?v=6" charset="utf-8"></script>
 
     <script>
         var VOCAL_START = 10.5;   // giây ca sĩ bắt đầu hát trong aud.mp3
@@ -152,7 +152,6 @@
         var tree = new Tree(canvas[0], width, height, opts);
         var seed = tree.seed;
         var foot = tree.footer;
-        var hold = 1;
 
         canvas.click(function(e) {
             var offset = canvas.offset(), x, y;
@@ -160,7 +159,7 @@
             y = (e.pageY - offset.top) / s;
             if (seed.hover(x, y)) {
                 playAudio();   // nhạc bắt đầu đúng lúc chạm vào tim
-                hold = 0; 
+                start();
                 canvas.unbind("click");
                 canvas.unbind("mousemove");
                 canvas.removeClass('hand');
@@ -172,43 +171,46 @@
             canvas.toggleClass('hand', seed.hover(x, y));
         });
 
-        var seedAnimate = eval(Jscex.compile("async", function () {
-            seed.draw();
-            while (hold) { $await(Jscex.Async.sleep(10)); }
-            while (seed.canScale()) { seed.scale(0.95); $await(Jscex.Async.sleep(10)); }
-            while (seed.canMove()) { seed.move(0, 2); foot.draw(); $await(Jscex.Async.sleep(10)); }
-        }));
+        // ---- Chạy hiệu ứng theo đồng hồ thật: máy chậm (iPhone) tự gộp nhiều bước
+        //      vào 1 khung hình nên tổng thời gian giống hệt máy tính ----
+        var STEP_MS = 11;
+        function phase(step, done) {          // step() trả về false khi xong
+            var last = performance.now(), acc = STEP_MS;
+            function frame(now) {
+                acc += Math.min(now - last, 120); last = now;
+                var n = 0;
+                while (acc >= STEP_MS && n < 12) {
+                    if (step() === false) { done(); return; }
+                    acc -= STEP_MS; n++;
+                }
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+        }
 
-        var growAnimate = eval(Jscex.compile("async", function () {
-            do { tree.grow(); $await(Jscex.Async.sleep(10)); }
-            while (tree.canGrow());
-        }));
-
-        var flowAnimate = eval(Jscex.compile("async", function () {
-            do { tree.flower(2); $await(Jscex.Async.sleep(10)); }
-            while (tree.canFlower());
-        }));
-
-        var moveAnimate = eval(Jscex.compile("async", function () {
-            tree.snapshot("p1", 240, 0, 610, 680);
-            while (tree.move("p1", 500, 0)) { foot.draw(); $await(Jscex.Async.sleep(10)); }
-            foot.draw();
-            tree.snapshot("p2", 500, 0, 610, 680);
-        }));
-
-        var textAnimate = eval(Jscex.compile("async", function () {
-            waitForVocal(function () { $("#code").show().typewriter(); });
-        }));
-
-        var runAsync = eval(Jscex.compile("async", function () {
-            $await(seedAnimate());
-            $await(growAnimate());
-            $await(flowAnimate());
-            $await(moveAnimate());
-            textAnimate().start();
-        }));
-
-        runAsync().start();
+        seed.draw();
+        function start() {
+            phase(function () {
+                if (seed.canScale()) { seed.scale(0.95); return; }
+                if (seed.canMove())  { seed.move(0, 2); foot.draw(); return; }
+                return false;
+            }, function () {
+                phase(function () {
+                    tree.grow(); return tree.canGrow();
+                }, function () {
+                    phase(function () {
+                        tree.flower(2); return tree.canFlower();
+                    }, function () {
+                        tree.snapshot("p1", 240, 0, 610, 680);
+                        phase(function () {
+                            var more = tree.move("p1", 500, 0); foot.draw(); return more;
+                        }, function () {
+                            waitForVocal(function () { $("#code").show().typewriter(); });
+                        });
+                    });
+                });
+            });
+        }
     })();
     </script>
 
